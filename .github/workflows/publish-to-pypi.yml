@@ -1,0 +1,66 @@
+# action的名称
+name: Publish python package to PYPI
+
+on: 
+  # 当master分支有push时，触发action
+  push: 
+    branches:
+      - master
+
+  # 当一个pr被合并到master时，触发action
+  pull_request:
+    branches:
+      - master
+  
+  # 当发布时，触发action
+  #release:
+  #  types: [created]
+
+  # 安排的事件开始,每小时触发一次
+  # schedule:
+  #   - cron:  '0 * * * *'
+
+jobs: 
+  deploy:
+    name: publish python package to PYPI
+    # 此作业在 Linux 上运行
+    runs-on: ubuntu-latest
+
+    steps:
+    # 此步骤使用 GitHub 的 https://github.com/actions/checkout
+    - uses: actions/checkout@v2
+    
+    # 设置python环境
+    # 此步骤使用 GitHub 的 https://github.com/actions/setup-python
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+    
+    # 安装依赖
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+        pip install -r requirements.txt
+    # 构建和发布
+    # - name: Build and publish
+    #   env:
+    #     TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+    #     TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+    #   run: |
+    #     python setup.py sdist bdist_wheel
+    #     twine upload dist/*
+
+    # 编译发布包
+    - name: build package
+      run: |
+        python setup.py sdist bdist_wheel
+
+    # 使用pypa/gh-action-pypi-publish发布dist/*项目到pypi
+    - name: Publish distribution to PyPI
+      # if: startsWith(github.ref, 'refs/tags') # 有条件发布
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.__TOKEN__ }}
